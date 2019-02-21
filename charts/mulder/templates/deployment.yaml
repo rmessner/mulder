@@ -20,7 +20,9 @@ spec:
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        args: ["-redis-addr","{{ .Release.Name }}-redis-master:6379"]
+        args: 
+          - -redis-addr
+          - {{ .Release.Name }}-redis-master:6379
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.service.internalPort }}
