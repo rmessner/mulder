@@ -21,6 +21,7 @@ pipeline {
         container('go') {
           dir('/home/jenkins/go/src/github.com/rmessner/mulder') {
             checkout scm
+            sh "make test-unit"
             sh "make linux"
             sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
             sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION"
@@ -31,6 +32,13 @@ pipeline {
           dir('/home/jenkins/go/src/github.com/rmessner/mulder/charts/preview') {
             sh "make preview"
             sh "jx preview --app $APP_NAME --dir ../.."
+          }
+          dir('/home/jenkins/go/src/github.com/rmessner/mulder') {
+            script {
+              sleep 10
+              addr=sh(script: "kubectl -n jx-$CHANGE_AUTHOR-$HELM_RELEASE get ing $APP_NAME -o jsonpath='{.spec.rules[0].host}'", returnStdout: true).trim()
+              sh "MULDER_ADDR=$addr make test-integration"
+            }
           }
         }
       }
